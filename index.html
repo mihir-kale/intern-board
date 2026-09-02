@@ -154,7 +154,7 @@
     .card .meta .row { margin: 2px 0; }
     .card .due { font-size: 11px; font-weight: 700; color: var(--muted); }
     .card .due.overdue { color: var(--warn); }
-    .card .intern { display: inline-block; background: transparent; border: 1px solid var(--border); padding: 1px 6px; font-size: 11px; color: var(--accent); }
+    .card .intern { display: inline-block; background: transparent; border: 1px solid var(--border); padding: 1px 6px; margin: 2px 4px 2px 0; font-size: 11px; color: var(--accent); }
     .card a { color: var(--accent); text-decoration: underline; text-decoration-style: dotted; }
     .card a:hover { color: var(--complete); }
     .card-actions { display: flex; gap: 6px; margin-top: 10px; }
@@ -292,6 +292,14 @@
     .btn-primary:hover { filter: brightness(1.1); }
     .btn-danger { background: var(--warn) !important; color: #1a0500 !important; border-color: var(--warn) !important; }
     .status-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+    .intern-checks { display: flex; flex-wrap: wrap; gap: 6px; }
+    .intern-check {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 10px; border: 1px solid var(--border); background: var(--bg);
+      font-size: 12px; color: var(--text); cursor: pointer; user-select: none;
+    }
+    .intern-check input { accent-color: var(--accent); margin: 0; }
+    .intern-check:has(input:checked) { border-color: var(--accent); color: var(--accent); }
     .status-pills .tag { width: auto; }
     .completed-toggle {
       margin-left: auto;
@@ -386,8 +394,8 @@
         <input id="fDue" type="date" />
       </div>
       <div class="field">
-        <label>Assigned Intern <span class="req">*</span></label>
-        <select id="fIntern"></select>
+        <label>Assigned Interns <span class="req">*</span></label>
+        <div class="intern-checks" id="internChecks"></div>
       </div>
       <div class="field">
         <label>Assignee <span class="hint">(optional, free text)</span></label>
@@ -395,25 +403,16 @@
       </div>
 
       <div class="field">
-        <label>Hyperlink 1 <span class="hint">(optional)</span></label>
+        <label>Description <span class="hint">(optional)</span></label>
+        <textarea id="fNotes" placeholder="Describe the assignment..."></textarea>
+      </div>
+      <div class="field">
+        <label>Hyperlink <span class="hint">(optional)</span></label>
         <input id="fLink1" type="url" placeholder="https://..." />
       </div>
       <div class="field">
-        <label>Hyperlink 1 Title <span class="hint">(optional)</span></label>
+        <label>Hyperlink Title <span class="hint">(optional)</span></label>
         <input id="fLinkTitle1" placeholder="Display text" />
-      </div>
-      <div class="field">
-        <label>Hyperlink 2 <span class="hint">(optional)</span></label>
-        <input id="fLink2" type="url" placeholder="https://..." />
-      </div>
-      <div class="field">
-        <label>Hyperlink 2 Title <span class="hint">(optional)</span></label>
-        <input id="fLinkTitle2" placeholder="Display text" />
-      </div>
-
-      <div class="field">
-        <label>Notes <span class="hint">(optional)</span></label>
-        <textarea id="fNotes" placeholder="Notes (commonly handled by the hyperlinked file)"></textarea>
       </div>
       <div class="field">
         <label>Status</label>
@@ -549,7 +548,7 @@
     function visibleCards() {
       return activeIntern === 'ALL'
         ? tickets
-        : tickets.filter(t => t.intern === activeIntern);
+        : tickets.filter(t => splitInterns(t.intern).includes(activeIntern));
     }
 
     function render() {
@@ -582,7 +581,6 @@
 
       let links = '';
       if (t.hyperlink_1) links += `<div class="row"><a href="${escapeHtml(t.hyperlink_1)}" target="_blank" rel="noopener">${escapeHtml(t.hyperlink_title_1 || t.hyperlink_1)}</a></div>`;
-      if (t.hyperlink_2) links += `<div class="row"><a href="${escapeHtml(t.hyperlink_2)}" target="_blank" rel="noopener">${escapeHtml(t.hyperlink_title_2 || t.hyperlink_2)}</a></div>`;
 
       const latest = t._latest;
 
@@ -590,7 +588,7 @@
         `<div class="title">${escapeHtml(t.title)}</div>` +
         `<div class="meta">` +
           `<div class="row due ${overdue ? 'overdue' : ''}">Due: ${escapeHtml(t.due_date || '—')}${overdue ? ' (overdue)' : ''}</div>` +
-          (t.intern ? `<div class="row"><span class="intern">${escapeHtml(t.intern)}</span></div>` : '') +
+          (t.intern ? `<div class="row">${splitInterns(t.intern).map(i => `<span class="intern">${escapeHtml(i)}</span>`).join(' ')}</div>` : '') +
           (t.assignee ? `<div class="row">Assignee: ${escapeHtml(t.assignee)}</div>` : '') +
           links +
           (t.notes ? `<div class="row">${escapeHtml(t.notes)}</div>` : '') +
@@ -718,17 +716,27 @@
       $('fId').value = t ? t.id : '';
       $('fTitle').value = t ? t.title : '';
       $('fDue').value = t ? t.due_date : '';
-      $('fIntern').value = t ? t.intern : Object.keys(INTERNS)[0];
+      const current = t ? splitInterns(t.intern) : [];
+      document.querySelectorAll('#internChecks input[type="checkbox"]').forEach(cb => {
+        cb.checked = current.includes(cb.value);
+      });
       $('fAssignee').value = t ? (t.assignee || '') : '';
       $('fLink1').value = t ? (t.hyperlink_1 || '') : '';
       $('fLinkTitle1').value = t ? (t.hyperlink_title_1 || '') : '';
-      $('fLink2').value = t ? (t.hyperlink_2 || '') : '';
-      $('fLinkTitle2').value = t ? (t.hyperlink_title_2 || '') : '';
       $('fNotes').value = t ? (t.notes || '') : '';
       modalStatus = t ? t.status : 'assigned';
       setStatusPill();
       $('deleteBtn').classList.toggle('hidden', !t);
       $('overlay').classList.add('open');
+    }
+
+    function splitInterns(intern) {
+      return String(intern || '').split(',').map(s => s.trim()).filter(Boolean);
+    }
+
+    function selectedInterns() {
+      return Array.from(document.querySelectorAll('#internChecks input[type="checkbox"]:checked'))
+        .map(cb => cb.value);
     }
 
     function setStatusPill() {
@@ -740,18 +748,18 @@
     async function save() {
       const title = $('fTitle').value.trim();
       const due = $('fDue').value;
+      const interns = selectedInterns();
       if (!title) { alert('Title is required.'); return; }
       if (!due) { alert('Due date is required.'); return; }
+      if (!interns.length) { alert('Assign at least one intern.'); return; }
 
       const payload = {
         title,
         due_date: due,
-        intern: $('fIntern').value,
+        intern: interns.join(', '),
         assignee: $('fAssignee').value.trim() || null,
         hyperlink_1: $('fLink1').value.trim() || null,
         hyperlink_title_1: $('fLinkTitle1').value.trim() || null,
-        hyperlink_2: $('fLink2').value.trim() || null,
-        hyperlink_title_2: $('fLinkTitle2').value.trim() || null,
         notes: $('fNotes').value.trim() || null,
         status: modalStatus,
       };
@@ -794,13 +802,13 @@
       p.onclick = () => { modalStatus = p.dataset.status; setStatusPill(); };
     });
 
-    // populate intern select
-    const sel = $('fIntern');
+    // populate intern checkboxes
+    const checks = $('internChecks');
     for (const name of Object.keys(INTERNS)) {
-      const o = document.createElement('option');
-      o.value = name;
-      o.textContent = name;
-      sel.appendChild(o);
+      const label = document.createElement('label');
+      label.className = 'intern-check';
+      label.innerHTML = `<input type="checkbox" value="${escapeHtml(name)}" /><span>${escapeHtml(name)}</span>`;
+      checks.appendChild(label);
     }
 
     init();
