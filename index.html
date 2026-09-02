@@ -242,13 +242,23 @@
       padding: 12px;
     }
     .side-box h3 { margin: 0 0 12px 0; font-size: 11px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
-    .loc-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--border); }
-    .loc-row:last-child { border-bottom: none; }
+    .loc-legend {
+      display: flex;
+      gap: 14px;
+      padding-bottom: 10px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+    }
+    .loc-legend span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .loc-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
+    .loc-dot { flex: none; width: 8px; height: 8px; background: var(--muted); }
     .loc-name { flex: 1 1 auto; font-weight: 700; font-size: 13px; color: var(--text); }
-    .loc-status { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 2px 8px; border: 1px solid; }
-    .loc-remote { border-color: var(--accent); color: var(--accent); }
-    .loc-office { border-color: #33aaff; color: #33aaff; }
-    .loc-next { border-color: var(--complete); color: var(--complete); }
+    .loc-remote { background: var(--accent); }
+    .loc-office { background: #33aaff; }
+    .loc-next { background: var(--complete); }
 
     /* Modal */
     .overlay {
@@ -355,14 +365,9 @@
 
     <div class="side">
       <div class="side-box">
-        <h3>LOCATION STATUS</h3>
+        <h3>LOCATION</h3>
+        <div class="loc-legend" id="locLegend"></div>
         <div id="locList"></div>
-      </div>
-      <div class="side-box">
-        <h3>TICKET STATUS LEGEND</h3>
-        <div class="loc-row"><span class="loc-status loc-office">In Office</span><span>On site</span></div>
-        <div class="loc-row"><span class="loc-status loc-remote">Remote</span><span>Working remote</span></div>
-        <div class="loc-row"><span class="loc-status loc-next">Next Time</span><span>Next visit</span></div>
       </div>
     </div>
   </div>
@@ -524,13 +529,19 @@
     function renderLoc() {
       const list = $('locList');
       list.innerHTML = '';
+      const LOC_CLS = { remote: 'loc-remote', office: 'loc-office', next: 'loc-next' };
+      const legend = $('locLegend');
+      legend.innerHTML =
+        `<span><i class="loc-dot loc-remote"></i>${LOC_LABEL['remote']}</span>` +
+        `<span><i class="loc-dot loc-office"></i>${LOC_LABEL['office']}</span>` +
+        `<span><i class="loc-dot loc-next"></i>${LOC_LABEL['next']}</span>`;
       for (const [name, loc] of Object.entries(INTERNS)) {
         const row = document.createElement('div');
         row.className = 'loc-row';
-        const cls = loc === 'office' ? 'loc-office' : loc === 'next' ? 'loc-next' : 'loc-remote';
+        const cls = LOC_CLS[loc] || 'loc-remote';
         row.innerHTML =
-          `<span class="loc-status ${cls}">${LOC_LABEL[loc]}</span>` +
-          `<span class="loc-name">${name}</span>`;
+          `<i class="loc-dot ${cls}"></i>` +
+          `<span class="loc-name">${escapeHtml(name)}</span>`;
         list.appendChild(row);
       }
     }
