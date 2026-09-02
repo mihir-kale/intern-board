@@ -294,7 +294,6 @@
     .loc-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
     .loc-dot { flex: none; width: 8px; height: 8px; background: var(--muted); }
     .loc-name { flex: 1 1 auto; font-weight: 700; font-size: 13px; color: var(--text); }
-    .loc-remote { background: var(--accent); }
     .loc-office { background: var(--office); }
     .loc-offline { background: var(--offline); }
 
@@ -500,12 +499,12 @@
     const SUPABASE_URL = 'https://gvvajesgltbaakxnqzbs.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2dmFqZXNnbHRiYWFreG5xemJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNzIyOTksImV4cCI6MjEwMzk0ODI5OX0.XVmxmuaVFiHUCHWs0D133on7rLFwoSIIUpqU4nTFYVY';
 
-    // Hard-coded interns: name -> default location ("remote" | "office" | "offline")
+    // Hard-coded interns: name -> location ("office" | "offline")
     const INTERNS = {
-      'Lydia Love':  'remote',
+      'Lydia Love':  'offline',
       'Mihir Kale':  'office',
       'Colin Tierney': 'offline',
-      'Eli Bright':  'remote',
+      'Eli Bright':  'offline',
     };
     // A toggle per intern, plus "All". Edit the list above to change names.
 
@@ -558,7 +557,7 @@
 
     const STATUS_ORDER = ['assigned', 'in_progress', 'complete'];
     const STATUS_LABEL = { assigned: 'Assigned', in_progress: 'In Progress', complete: 'Completed' };
-    const LOC_LABEL = { remote: 'Remote', office: 'In Office', offline: 'Offline' };
+    const LOC_LABEL = { office: 'In Office', offline: 'Offline' };
 
     let client = null;
     let tickets = [];
@@ -634,16 +633,15 @@
     function renderLoc() {
       const list = $('locList');
       list.innerHTML = '';
-      const LOC_CLS = { remote: 'loc-remote', office: 'loc-office', offline: 'loc-offline' };
+      const LOC_CLS = { office: 'loc-office', offline: 'loc-offline' };
       const legend = $('locLegend');
       legend.innerHTML =
-        `<span><i class="loc-dot loc-remote"></i>${LOC_LABEL['remote']}</span>` +
         `<span><i class="loc-dot loc-office"></i>${LOC_LABEL['office']}</span>` +
         `<span><i class="loc-dot loc-offline"></i>${LOC_LABEL['offline']}</span>`;
       for (const [name, loc] of Object.entries(INTERNS)) {
         const row = document.createElement('div');
         row.className = 'loc-row';
-        const cls = LOC_CLS[loc] || 'loc-remote';
+        const cls = LOC_CLS[loc] || 'loc-offline';
         row.innerHTML =
           `<i class="loc-dot ${cls}"></i>` +
           `<span class="loc-name">${escapeHtml(name)}</span>`;
