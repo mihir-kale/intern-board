@@ -242,6 +242,8 @@
       padding: 12px;
     }
     .side-box h3 { margin: 0 0 12px 0; font-size: 11px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+    .side-box h3.clickable { margin: 0; cursor: pointer; color: var(--accent); }
+    .side-box h3.clickable:hover { text-decoration: underline; }
     .loc-legend {
       display: flex;
       gap: 14px;
@@ -387,8 +389,7 @@
         <div id="locList"></div>
       </div>
       <div class="side-box">
-        <h3>WEEKLY SCHEDULE</h3>
-        <div id="scheduleContainer"></div>
+        <h3 class="clickable" id="scheduleBtn">WEEKLY SCHEDULE ▸</h3>
       </div>
     </div>
   </div>
@@ -440,6 +441,17 @@
         <button id="deleteBtn" class="btn-danger hidden">Delete</button>
         <button id="cancelBtn">Cancel</button>
         <button id="saveBtn" class="btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule Modal -->
+  <div class="overlay" id="schedOverlay">
+    <div class="modal">
+      <h2>WEEKLY SCHEDULE</h2>
+      <div id="scheduleContainer"></div>
+      <div class="modal-actions">
+        <button id="schedCloseBtn">Close</button>
       </div>
     </div>
   </div>
@@ -529,7 +541,6 @@
       client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       renderTags();
       renderLoc();
-      renderSchedule();
       await loadTickets();
       client
         .channel('tickets-realtime')
@@ -869,6 +880,15 @@
     $('cancelBtn').onclick = () => $('overlay').classList.remove('open');
     $('saveBtn').onclick = save;
     $('deleteBtn').onclick = remove;
+
+    $('scheduleBtn').onclick = () => {
+      renderSchedule();
+      $('schedOverlay').classList.add('open');
+    };
+    $('schedCloseBtn').onclick = () => $('schedOverlay').classList.remove('open');
+    $('schedOverlay').addEventListener('click', (e) => {
+      if (e.target === $('schedOverlay')) $('schedOverlay').classList.remove('open');
+    });
 
     $('completedToggle').onclick = () => {
       const cols = $('columns');
