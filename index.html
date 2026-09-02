@@ -258,7 +258,16 @@
     .loc-name { flex: 1 1 auto; font-weight: 700; font-size: 13px; color: var(--text); }
     .loc-remote { background: var(--accent); }
     .loc-office { background: #33aaff; }
-    .loc-next { background: var(--complete); }
+    .loc-offline { background: #59605a; }
+
+    /* Weekly schedule */
+    .schedule { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .schedule th, .schedule td { border: 1px solid var(--border); padding: 3px 4px; text-align: left; vertical-align: top; }
+    .schedule th { color: var(--muted); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; font-size: 9px; }
+    .schedule td.time { color: var(--muted); white-space: nowrap; font-size: 10px; }
+    .schedule td.on { color: var(--text); }
+    .schedule td.off { color: var(--muted); font-style: italic; }
+    .schedule .c-on { color: var(--accent); }
 
     /* Modal */
     .overlay {
@@ -292,10 +301,10 @@
     .btn-primary:hover { filter: brightness(1.1); }
     .btn-danger { background: var(--warn) !important; color: #1a0500 !important; border-color: var(--warn) !important; }
     .status-pills { display: flex; gap: 6px; flex-wrap: wrap; }
-    .intern-checks { display: flex; flex-wrap: wrap; gap: 6px; }
+    .intern-checks { display: flex; flex-direction: column; gap: 4px; }
     .intern-check {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 5px 10px; border: 1px solid var(--border); background: var(--bg);
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px; border: 1px solid var(--border); background: var(--bg);
       font-size: 12px; color: var(--text); cursor: pointer; user-select: none;
     }
     .intern-check input { accent-color: var(--accent); margin: 0; }
@@ -377,6 +386,10 @@
         <div class="loc-legend" id="locLegend"></div>
         <div id="locList"></div>
       </div>
+      <div class="side-box">
+        <h3>WEEKLY SCHEDULE</h3>
+        <div id="scheduleContainer"></div>
+      </div>
     </div>
   </div>
 
@@ -438,21 +451,65 @@
     const SUPABASE_URL = 'https://gvvajesgltbaakxnqzbs.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2dmFqZXNnbHRiYWFreG5xemJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNzIyOTksImV4cCI6MjEwMzk0ODI5OX0.XVmxmuaVFiHUCHWs0D133on7rLFwoSIIUpqU4nTFYVY';
 
-    // Hard-coded interns: name -> default location ("remote" | "office" | "next")
+    // Hard-coded interns: name -> default location ("remote" | "office" | "offline")
     const INTERNS = {
       'Lydia Love':  'remote',
       'Mihir Kale':  'office',
-      'Colin Tierney': 'next',
+      'Colin Tierney': 'offline',
       'Eli Bright':  'remote',
     };
     // A toggle per intern, plus "All". Edit the list above to change names.
+
+    // Weekly on-site schedule: day -> array indexed by SCHEDULE_TIMES (empty = "off", away)
+    const SCHEDULE_TIMES = ['9:00','10:00','11:00','12:00','1:00','2:00','3:00','4:00'];
+    const SCHEDULE = {
+      'Monday': [
+        ['Lydia Love','Colin Tierney','Mihir Kale','Eli Bright'],
+        ['Lydia Love','Colin Tierney','Mihir Kale','Eli Bright'],
+        ['Lydia Love','Colin Tierney','Mihir Kale','Eli Bright'],
+        ['Lydia Love','Colin Tierney','Mihir Kale'],
+        ['Lydia Love','Colin Tierney','Mihir Kale'],
+        ['Lydia Love','Colin Tierney','Mihir Kale'],
+        ['Lydia Love','Colin Tierney','Mihir Kale'],
+        ['Colin Tierney','Mihir Kale'],
+      ],
+      'Tuesday': [
+        ['Eli Bright'],
+        ['Eli Bright'],
+        ['Eli Bright'],
+        ['Lydia Love','Colin Tierney','Mihir Kale','Eli Bright'],
+        ['Lydia Love','Colin Tierney','Mihir Kale','Eli Bright'],
+        ['Lydia Love','Colin Tierney','Mihir Kale','Eli Bright'],
+        ['Lydia Love','Colin Tierney','Mihir Kale','Eli Bright'],
+        ['Colin Tierney','Mihir Kale','Eli Bright'],
+      ],
+      'Wednesday': [
+        ['Lydia Love','Colin Tierney','Mihir Kale','Eli Bright'],
+        ['Lydia Love','Colin Tierney','Mihir Kale','Eli Bright'],
+        ['Lydia Love','Colin Tierney','Mihir Kale','Eli Bright'],
+        [], [], [], [], [],
+      ],
+      'Thursday': [
+        ['Eli Bright'],
+        ['Eli Bright'],
+        ['Eli Bright'],
+        [], [], [], [], [],
+      ],
+      'Friday': [
+        ['Lydia Love','Mihir Kale'],
+        ['Lydia Love','Mihir Kale'],
+        ['Lydia Love','Mihir Kale'],
+        ['Lydia Love','Mihir Kale'],
+        [], [], [], [],
+      ],
+    };
     // ============================================================
     // END CONFIG
     // ============================================================
 
     const STATUS_ORDER = ['assigned', 'in_progress', 'complete'];
     const STATUS_LABEL = { assigned: 'Assigned', in_progress: 'In Progress', complete: 'Completed' };
-    const LOC_LABEL = { remote: 'Remote', office: 'In Office', next: 'Next Time' };
+    const LOC_LABEL = { remote: 'Remote', office: 'In Office', offline: 'Offline' };
 
     let client = null;
     let tickets = [];
@@ -472,6 +529,7 @@
       client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       renderTags();
       renderLoc();
+      renderSchedule();
       await loadTickets();
       client
         .channel('tickets-realtime')
@@ -528,12 +586,12 @@
     function renderLoc() {
       const list = $('locList');
       list.innerHTML = '';
-      const LOC_CLS = { remote: 'loc-remote', office: 'loc-office', next: 'loc-next' };
+      const LOC_CLS = { remote: 'loc-remote', office: 'loc-office', offline: 'loc-offline' };
       const legend = $('locLegend');
       legend.innerHTML =
         `<span><i class="loc-dot loc-remote"></i>${LOC_LABEL['remote']}</span>` +
         `<span><i class="loc-dot loc-office"></i>${LOC_LABEL['office']}</span>` +
-        `<span><i class="loc-dot loc-next"></i>${LOC_LABEL['next']}</span>`;
+        `<span><i class="loc-dot loc-offline"></i>${LOC_LABEL['offline']}</span>`;
       for (const [name, loc] of Object.entries(INTERNS)) {
         const row = document.createElement('div');
         row.className = 'loc-row';
@@ -543,6 +601,29 @@
           `<span class="loc-name">${escapeHtml(name)}</span>`;
         list.appendChild(row);
       }
+    }
+
+    function renderSchedule() {
+      const wrap = $('scheduleContainer');
+      wrap.innerHTML = '';
+      const days = Object.keys(SCHEDULE);
+      const rows = SCHEDULE_TIMES.map((time, ti) => {
+        const cells = days.map(day => {
+          const names = SCHEDULE[day][ti] || [];
+          if (!names.length) return `<td class="off">off</td>`;
+          return `<td class="on">${names.map(n => {
+            const short = shortName(n);
+            return `<span class="c-on">${escapeHtml(short)}</span>`;
+          }).join(', ')}</td>`;
+        }).join('');
+        return `<tr><td class="time">${time}</td>${cells}</tr>`;
+      }).join('');
+      const head = `<tr><th></th>${days.map(d => `<th>${escapeHtml(d.slice(0,3))}</th>`).join('')}</tr>`;
+      wrap.innerHTML = `<table class="schedule">${head}${rows}</table>`;
+    }
+
+    function shortName(full) {
+      return full.split(' ')[0];
     }
 
     function visibleCards() {
