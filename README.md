@@ -1,9 +1,11 @@
 # Intern Board
 
-A single-page, GitHub Pages–hosted Jira-style board for interns. Staff can submit new tickets; interns' work is shown in a Kanban view (Not Started / Started / Complete). Backend is Supabase.
+A single-page, GitHub Pages–hosted Jira-style board for interns. Staff can submit new tickets; interns' work is shown in a Kanban view (Assigned / In Progress / Completed). Backend is Supabase.
 
 ## Features
-- **3-column board**: Not Started, Started, Complete, with card colors and move buttons.
+- **Kanban board**: Assigned and In Progress by default, with an optional **Completed** column toggled on/off.
+- **Expandable tickets**: click "Status updates" on a card to expand it. Each ticket keeps a history of status updates, each with a **date** and up to **400 words** of text (live word counter).
+- **Latest update preview**: collapsed cards show the most recent status update — its date plus a 20-word preview.
 - **Tag toggles** above the board to filter by intern (one per intern, plus "All").
 - **Location box** on the right showing each intern's status: Remote, In Office, or Next Time.
 - **Ticket cards**: title, due date (with overdue highlighting), assigned intern, optional assignee, up to two hyperlink/title pairs, and optional notes.
@@ -24,11 +26,11 @@ Location values: `remote`, `office`, or `next`.
 
 ## Backend (Supabase)
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. Open **SQL Editor**, paste and run `supabase/schema.sql` to create the `tickets` table (RLS allows public anon access for demo — tighten this if the board should not be publicly editable).
-3. Copy the project **URL** and **anon key** (Project Settings → API).
+1. Create a project at [supabase.com](https://supabase.com) (or link this repo to an existing one).
+2. Apply the schema with the CLI: `supabase db push` (this creates the `tickets` and `status_updates` tables, with RLS allowing public anon access for demo — tighten if the board should not be publicly editable).
+3. Copy the project **URL** and **anon key** (Project Settings → API) into `index.html` under `// CONFIG`.
 
-**Note:** If you have the Supabase CLI set up, you can apply the schema with `supabase db push`, but hosting this static site still needs the URL + anon key placed in `index.html`.
+This repo is already linked to the `intern-board` project (`gvvajesgltbaakxnqzbs`) and the schema is applied.
 
 ## Configure
 
