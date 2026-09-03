@@ -441,7 +441,7 @@
         <input id="fTitle" placeholder="Ticket title" />
       </div>
       <div class="field">
-        <label>Due Date <span class="req">*</span></label>
+        <label>Due Date</label>
         <input id="fDue" type="date" />
       </div>
       <div class="field">
@@ -878,12 +878,11 @@
       const due = $('fDue').value;
       const interns = selectedInterns();
       if (!title) { alert('Title is required.'); return; }
-      if (!due) { alert('Due date is required.'); return; }
       if (!interns.length) { alert('Assign at least one intern.'); return; }
 
       const payload = {
         title,
-        due_date: due,
+        due_date: due || null,
         intern: interns.join(', '),
         assignee: $('fAssignee').value.trim() || null,
         hyperlink_1: $('fLink1').value.trim() || null,
