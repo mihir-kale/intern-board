@@ -324,7 +324,6 @@
     .intern-check:has(input:checked) { border-color: var(--accent); color: var(--accent); }
     .status-pills .tag { width: auto; }
     .completed-toggle {
-      margin-left: auto;
       padding: 4px 10px;
       border: 1px solid var(--border);
       background: transparent;
@@ -364,8 +363,8 @@
 
       <div class="tagbar" id="tagbar">
         <span class="label">Filter:</span>
-        <span class="tag active" data-intern="ALL">All</span>
         <button class="completed-toggle" id="completedToggle">Show Completed</button>
+        <span class="tag active" data-intern="ALL">All</span>
       </div>
 
       <div class="columns" id="columns">
