@@ -74,7 +74,6 @@
       margin: 0 auto;
     }
     .main { flex: 1 1 auto; min-width: 0; }
-    .side { flex: 0 0 280px; }
 
     /* Header */
     .topbar {
@@ -124,6 +123,9 @@
     }
     .tagbar .label { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
     .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       padding: 4px 10px;
       border: 1px solid var(--border);
       background: transparent;
@@ -137,6 +139,10 @@
     }
     .tag:hover { color: var(--text); border-color: var(--accent); }
     .tag.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+    .tag-legend { display: inline-flex; gap: 8px; margin-left: 8px; align-items: center; }
+    .tag-legend .tag { cursor: default; }
+    .tag-legend .tag:hover { border-color: var(--border); color: var(--muted); }
+    .tag-legend .loc-dot { flex: none; width: 8px; height: 8px; }
 
     /* Columns */
     .columns {
@@ -270,41 +276,10 @@
     .update-form .add-btn:hover { background: var(--accent); color: var(--on-accent); }
     .update-form .add-btn:disabled { border-color: var(--border); color: var(--muted); cursor: not-allowed; background: transparent; }
 
-    /* Side / location */
-    .side-box {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      margin-top: 14px;
-      padding: 12px;
-    }
-    .side-box h3 { margin: 0 0 12px 0; font-size: 11px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
-    .side-box h3.clickable { margin: 0; cursor: pointer; color: var(--accent); }
-    .side-box h3.clickable:hover { text-decoration: underline; }
-    .loc-legend {
-      display: flex;
-      gap: 14px;
-      padding-bottom: 10px;
-      margin-bottom: 8px;
-      border-bottom: 1px solid var(--border);
-      font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 0.5px;
-    }
-    .loc-legend span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-    .loc-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; }
-    .loc-dot { flex: none; width: 8px; height: 8px; background: var(--muted); }
-    .loc-name { flex: 1 1 auto; font-weight: 700; font-size: 13px; color: var(--text); }
+    /* Presence dots (filter tags) */
+    .loc-dot { flex: none; width: 9px; height: 9px; background: var(--muted); }
     .loc-office { background: var(--office); }
     .loc-offline { background: var(--offline); }
-
-    /* Weekly schedule */
-    .schedule { width: 100%; border-collapse: collapse; font-size: 11px; }
-    .schedule th, .schedule td { border: 1px solid var(--border); padding: 3px 4px; text-align: left; vertical-align: top; }
-    .schedule th { color: var(--muted); font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; font-size: 9px; }
-    .schedule td.time { color: var(--muted); white-space: nowrap; font-size: 10px; }
-    .schedule td.on { color: var(--text); }
-    .schedule td.off { color: var(--muted); font-style: italic; }
-    .schedule .c-on { color: var(--accent); }
 
     /* Modal */
     .overlay {
@@ -340,11 +315,11 @@
     .status-pills { display: flex; gap: 6px; flex-wrap: wrap; }
     .intern-checks { display: flex; flex-direction: column; gap: 4px; }
     .intern-check {
-      display: flex; align-items: center; justify-content: flex-start; gap: 10px;
-      padding: 7px 10px; border: 1px solid var(--border); background: var(--bg);
+      display: flex; align-items: center; justify-content: flex-start; gap: 14px;
+      padding: 8px 12px; border: 1px solid var(--border); background: var(--bg);
       font-size: 12px; color: var(--text); cursor: pointer; user-select: none; line-height: 1;
     }
-    .intern-check input { flex: 0 0 auto; width: 15px; height: 15px; accent-color: var(--accent); margin: 0; vertical-align: middle; }
+    .intern-check input { flex: 0 0 auto; width: 16px; height: 16px; accent-color: var(--accent); margin: 0; vertical-align: middle; }
     .intern-check span { display: inline-flex; align-items: center; min-height: 15px; }
     .intern-check:has(input:checked) { border-color: var(--accent); color: var(--accent); }
     .status-pills .tag { width: auto; }
@@ -372,7 +347,6 @@
     }
     @media (max-width: 900px) {
       .layout { flex-direction: column; }
-      .side { flex: 1 1 auto; }
       .columns, .columns.show-completed { grid-template-columns: 1fr; }
     }
   </style>
@@ -416,17 +390,6 @@
           </div>
           <div class="col-body" data-body="complete"></div>
         </div>
-      </div>
-    </div>
-
-    <div class="side">
-      <div class="side-box">
-        <h3>LOCATION</h3>
-        <div class="loc-legend" id="locLegend"></div>
-        <div id="locList"></div>
-      </div>
-      <div class="side-box">
-        <h3 class="clickable" id="scheduleBtn">WEEKLY SCHEDULE ▸</h3>
       </div>
     </div>
   </div>
@@ -478,17 +441,6 @@
         <button id="deleteBtn" class="btn-danger hidden">Delete</button>
         <button id="cancelBtn">Cancel</button>
         <button id="saveBtn" class="btn-primary">Save</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Schedule Modal -->
-  <div class="overlay" id="schedOverlay">
-    <div class="modal">
-      <h2>WEEKLY SCHEDULE</h2>
-      <div id="scheduleContainer"></div>
-      <div class="modal-actions">
-        <button id="schedCloseBtn">Close</button>
       </div>
     </div>
   </div>
@@ -577,7 +529,6 @@
       }
       client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       renderTags();
-      renderLoc();
       await loadTickets();
       client
         .channel('tickets-realtime')
@@ -620,7 +571,11 @@
         const t = document.createElement('span');
         t.className = 'tag';
         t.dataset.intern = name;
-        t.textContent = name;
+        const loc = currentLocation(name);
+        const dot = document.createElement('i');
+        dot.className = 'loc-dot ' + (loc === 'office' ? 'loc-office' : 'loc-offline');
+        t.appendChild(dot);
+        t.appendChild(document.createTextNode(name));
         t.onclick = () => {
           activeIntern = name;
           bar.querySelectorAll('.tag').forEach(x => x.classList.remove('active'));
@@ -629,48 +584,34 @@
         };
         bar.appendChild(t);
       }
+      bar.appendChild(legendEl());
     }
 
-    function renderLoc() {
-      const list = $('locList');
-      list.innerHTML = '';
-      const LOC_CLS = { office: 'loc-office', offline: 'loc-offline' };
-      const legend = $('locLegend');
-      legend.innerHTML =
-        `<span><i class="loc-dot loc-office"></i>${LOC_LABEL['office']}</span>` +
-        `<span><i class="loc-dot loc-offline"></i>${LOC_LABEL['offline']}</span>`;
-      for (const [name, loc] of Object.entries(INTERNS)) {
-        const row = document.createElement('div');
-        row.className = 'loc-row';
-        const cls = LOC_CLS[loc] || 'loc-offline';
-        row.innerHTML =
-          `<i class="loc-dot ${cls}"></i>` +
-          `<span class="loc-name">${escapeHtml(name)}</span>`;
-        list.appendChild(row);
-      }
+    function legendEl() {
+      const wrap = document.createElement('span');
+      wrap.className = 'tag-legend';
+      wrap.innerHTML =
+        `<span class="tag"><i class="loc-dot loc-office"></i>${escapeHtml(LOC_LABEL['office'])}</span>` +
+        `<span class="tag"><i class="loc-dot loc-offline"></i>${escapeHtml(LOC_LABEL['offline'])}</span>`;
+      return wrap;
     }
 
-    function renderSchedule() {
-      const wrap = $('scheduleContainer');
-      wrap.innerHTML = '';
-      const days = Object.keys(SCHEDULE);
-      const rows = SCHEDULE_TIMES.map((time, ti) => {
-        const cells = days.map(day => {
-          const names = SCHEDULE[day][ti] || [];
-          if (!names.length) return `<td class="off">off</td>`;
-          return `<td class="on">${names.map(n => {
-            const short = shortName(n);
-            return `<span class="c-on">${escapeHtml(short)}</span>`;
-          }).join(', ')}</td>`;
-        }).join('');
-        return `<tr><td class="time">${time}</td>${cells}</tr>`;
-      }).join('');
-      const head = `<tr><th></th>${days.map(d => `<th>${escapeHtml(d.slice(0,3))}</th>`).join('')}</tr>`;
-      wrap.innerHTML = `<table class="schedule">${head}${rows}</table>`;
+    function formatDate(dateStr) {
+      if (!dateStr) return '—';
+      const d = new Date(dateStr + 'T00:00:00');
+      if (isNaN(d)) return '—';
+      return d.toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
     }
 
-    function shortName(full) {
-      return full.split(' ')[0];
+    // Real-time presence: is this intern scheduled on-site right now?
+    function currentLocation(name) {
+      const now = new Date();
+      const day = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][now.getDay()];
+      const slot = SCHEDULE[day];
+      if (!slot) return 'offline';
+      const ti = now.getHours() - 9;
+      if (ti < 0 || ti >= slot.length) return 'offline';
+      return (slot[ti] || []).includes(name) ? 'office' : 'offline';
     }
 
     function visibleCards() {
@@ -715,7 +656,7 @@
       card.innerHTML =
         `<div class="title">${escapeHtml(t.title)}</div>` +
         `<div class="meta">` +
-          `<div class="row due ${overdue ? 'overdue' : ''}">Due: ${escapeHtml(t.due_date || '—')}${overdue ? ' (overdue)' : ''}</div>` +
+          `<div class="row due ${overdue ? 'overdue' : ''}">Due: ${formatDate(t.due_date)}${overdue ? ' (overdue)' : ''}</div>` +
           (t.intern ? `<div class="row">${splitInterns(t.intern).map(i => `<span class="intern">${escapeHtml(i)}</span>`).join(' ')}</div>` : '') +
           (t.assignee ? `<div class="row">Assignee: ${escapeHtml(t.assignee)}</div>` : '') +
           links +
@@ -928,15 +869,6 @@
     $('cancelBtn').onclick = () => $('overlay').classList.remove('open');
     $('saveBtn').onclick = save;
     $('deleteBtn').onclick = remove;
-
-    $('scheduleBtn').onclick = () => {
-      renderSchedule();
-      $('schedOverlay').classList.add('open');
-    };
-    $('schedCloseBtn').onclick = () => $('schedOverlay').classList.remove('open');
-    $('schedOverlay').addEventListener('click', (e) => {
-      if (e.target === $('schedOverlay')) $('schedOverlay').classList.remove('open');
-    });
 
     $('completedToggle').onclick = () => {
       const cols = $('columns');
