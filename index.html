@@ -651,8 +651,8 @@
           ? `<div class="title"><a class="tlink" href="${escapeHtml(t.hyperlink_1)}" target="_blank" rel="noopener">${escapeHtml(t.title)}</a></div>`
           : `<div class="title">${escapeHtml(t.title)}</div>`) +
         `<div class="meta">` +
-          `<div class="row due ${overdue ? 'overdue' : ''}">Due: ${formatDate(t.due_date)}${overdue ? ' (overdue)' : ''}</div>` +
           (t.intern ? `<div class="row">${splitInterns(t.intern).map(i => `<span class="intern">${escapeHtml(i)}</span>`).join(' ')}</div>` : '') +
+          `<div class="row due ${overdue ? 'overdue' : ''}">Due: ${formatDate(t.due_date)}${overdue ? ' (overdue)' : ''}</div>` +
           (t.notes ? `<div class="row">${escapeHtml(t.notes)}</div>` : '') +
         `</div>` +
         (latest
