@@ -199,7 +199,7 @@
     .card .intern { display: inline-block; background: transparent; border: 1px solid var(--border); padding: 1px 6px; margin: 2px 4px 2px 0; font-size: 11px; color: var(--accent); }
     .card a { color: var(--accent); text-decoration: underline; text-decoration-style: dotted; }
     .card a:hover { color: var(--complete); }
-    .card-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+    .card-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; }
     .card-actions button {
       border: 1px solid var(--border); background: transparent;
       color: var(--muted); padding: 3px 10px; font-family: inherit; font-size: 10px; font-weight: 700;
@@ -654,7 +654,6 @@
           : `<div class="title">${escapeHtml(t.title)}</div>`) +
         `<div class="meta">` +
           (t.intern ? `<div class="row">${splitInterns(t.intern).map(i => `<span class="intern">${escapeHtml(i)}</span>`).join(' ')}</div>` : '') +
-          `<div class="row due ${overdue ? 'overdue' : ''}">Due: ${formatDate(t.due_date)}${overdue ? ' (overdue)' : ''}</div>` +
           (t.notes ? `<div class="row">${escapeHtml(t.notes)}</div>` : '') +
         `</div>` +
         (latest
@@ -672,9 +671,12 @@
             `<button class="add-btn" type="button">Add update</button>` +
           `</div>` +
         `</div>` +
-        (t.status === 'assigned' || t.status === 'in_progress'
-          ? `<div class="card-actions"><button class="start-stop" data-move="next" type="button">${t.status === 'assigned' ? 'STARTED' : 'COMPLETED'}</button></div>`
-          : '') + 
+        `<div class="card-actions">` +
+          `<span class="row due ${overdue ? 'overdue' : ''}">Due: ${formatDate(t.due_date)}${overdue ? ' (overdue)' : ''}</span>` +
+          (t.status === 'assigned' || t.status === 'in_progress'
+            ? `<button class="start-stop" data-move="next" type="button">${t.status === 'assigned' ? 'STARTED' : 'COMPLETED'}</button>`
+            : '') +
+        `</div>` +
         `</div>`;
 
       const expandEl = card.querySelector('.expand');
