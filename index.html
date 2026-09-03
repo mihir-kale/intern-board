@@ -425,10 +425,6 @@
         <input id="fLink1" type="url" placeholder="https://..." />
       </div>
       <div class="field">
-        <label>Hyperlink Title <span class="hint">(optional)</span></label>
-        <input id="fLinkTitle1" placeholder="Display text" />
-      </div>
-      <div class="field">
         <label>Status</label>
         <div class="status-pills" id="statusPills">
           <span class="tag" data-status="assigned">Assigned</span>
@@ -641,24 +637,22 @@
       const card = document.createElement('div');
       card.className = 'card';
       card.dataset.status = t.status;
-      card.onclick = (e) => { if (!e.target.closest('.expand, .add-btn, .history, .update-form')) openEdit(t); };
+      card.onclick = (e) => { if (!e.target.closest('.expand, .add-btn, .history, .update-form, .tlink')) openEdit(t); };
 
       const today = new Date();
       today.setHours(0,0,0,0);
       const due = t.due_date ? new Date(t.due_date + 'T00:00:00') : null;
       const overdue = due && t.status !== 'complete' && due < today;
 
-      let links = '';
-      if (t.hyperlink_1) links += `<div class="row"><a href="${escapeHtml(t.hyperlink_1)}" target="_blank" rel="noopener">${escapeHtml(t.hyperlink_title_1 || t.hyperlink_1)}</a></div>`;
-
       const latest = t._latest;
 
       card.innerHTML =
-        `<div class="title">${escapeHtml(t.title)}</div>` +
+        (t.hyperlink_1
+          ? `<div class="title"><a class="tlink" href="${escapeHtml(t.hyperlink_1)}" target="_blank" rel="noopener">${escapeHtml(t.title)}</a></div>`
+          : `<div class="title">${escapeHtml(t.title)}</div>`) +
         `<div class="meta">` +
           `<div class="row due ${overdue ? 'overdue' : ''}">Due: ${formatDate(t.due_date)}${overdue ? ' (overdue)' : ''}</div>` +
           (t.intern ? `<div class="row">${splitInterns(t.intern).map(i => `<span class="intern">${escapeHtml(i)}</span>`).join(' ')}</div>` : '') +
-          links +
           (t.notes ? `<div class="row">${escapeHtml(t.notes)}</div>` : '') +
         `</div>` +
         (latest
@@ -791,7 +785,6 @@
       });
       $('fAssignee').value = t ? (t.assignee || '') : '';
       $('fLink1').value = t ? (t.hyperlink_1 || '') : '';
-      $('fLinkTitle1').value = t ? (t.hyperlink_title_1 || '') : '';
       $('fNotes').value = t ? (t.notes || '') : '';
       modalStatus = t ? t.status : 'assigned';
       setStatusPill();
@@ -827,7 +820,7 @@
         intern: interns.join(', '),
         assignee: $('fAssignee').value.trim() || null,
         hyperlink_1: $('fLink1').value.trim() || null,
-        hyperlink_title_1: $('fLinkTitle1').value.trim() || null,
+        hyperlink_title_1: null,
         notes: $('fNotes').value.trim() || null,
         status: modalStatus,
       };
