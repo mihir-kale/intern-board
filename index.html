@@ -658,7 +658,6 @@
         `<div class="meta">` +
           `<div class="row due ${overdue ? 'overdue' : ''}">Due: ${formatDate(t.due_date)}${overdue ? ' (overdue)' : ''}</div>` +
           (t.intern ? `<div class="row">${splitInterns(t.intern).map(i => `<span class="intern">${escapeHtml(i)}</span>`).join(' ')}</div>` : '') +
-          (t.assignee ? `<div class="row">Assignee: ${escapeHtml(t.assignee)}</div>` : '') +
           links +
           (t.notes ? `<div class="row">${escapeHtml(t.notes)}</div>` : '') +
         `</div>` +
