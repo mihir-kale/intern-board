@@ -549,13 +549,15 @@
       if (!tickets.length) return;
       const ids = tickets.map(t => t.id);
       const { data, error } = await client.from('status_updates')
-        .select('ticket_id, update_date, body')
-        .in('ticket_id', ids);
+        .select('ticket_id, update_date, body, created_at')
+        .in('ticket_id', ids)
+        .order('update_date', { ascending: false })
+        .order('created_at', { ascending: false });
       if (error) return;
       const latest = {};
       for (const u of data || []) {
-        const cur = latest[u.ticket_id];
-        if (!cur || u.update_date > cur.update_date) latest[u.ticket_id] = u;
+        if (latest[u.ticket_id]) continue;
+        latest[u.ticket_id] = u;
       }
       for (const t of tickets) t._latest = latest[t.id] || null;
     }
